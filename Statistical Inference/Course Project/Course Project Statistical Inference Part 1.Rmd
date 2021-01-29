@@ -1,0 +1,86 @@
+---
+title: "Statistical Inference Course Project - Part 1"
+author: "Luis Fernando Agottani"
+date: "24/08/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The first part of this project has the intention to study how the Central Limit Theorem works with means from simulations with exponential distribution.
+
+## Part 1 - A simulation exercise.
+
+ The goal of the first step is input the mean of each 1000 simulations with 40 exponentials, where lambda=0.2, rexp(n,lambda) and compare with de mean of the exponencial distribution, which is 1/lambda. 
+
+```{r rexp, echo=TRUE}
+n=40
+simulations=1000
+lambda=0.2
+
+mns = NULL
+for (i in 1 : 1000) mns = c(mns,
+                            mean(rexp(n,lambda)))
+
+```
+
+1. Show the sample mean and compare it to the theoretical mean of the distribution.
+
+```{r Theorical mean, echo=TRUE}
+Theoricalmean<- 1/lambda
+
+Theoricalmean
+
+Samplemean<- mean(mns)
+
+Samplemean
+```
+
+2. Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
+
+```{r Theorical variance, echo=TRUE}
+Theoricalvariance<- (1/lambda/sqrt(40))^2
+
+Theoricalvariance
+
+Samplevariance<- var(mns)
+
+Samplevariance
+```
+
+As we can see, the sample mean and variance are very similar to the therorical. 
+
+3. Show that the distribution is approximately normal.
+
+```{r plotNORMAL, echo=TRUE}
+hist(mns, 
+     breaks= 25,
+     prob = TRUE,
+     col="grey", 
+     border="white", 
+     xlab="Means", 
+     main="Means distribution from exponencial simulation")
+  
+abline(v=mean(mns), 
+       col="black",
+       lwd=6)
+
+abline(v=5, 
+       col="red",
+       lwd=4)
+
+legend(x="topright",
+      c("Sample Mean","Theorical Mean", "Theorical Distribution"),
+      col=c("black","red", "blue"),
+      lty=c(1,1))
+
+x <- seq(min(mns), max(mns), length = 100)
+
+lines(x, dnorm(x, mean = 1/lambda, sd = (1/lambda/sqrt(n))), pch = 25, col = "blue")
+```
+
+So, the blue line represents the theorical distribuition, which is similar to the sample mean.
