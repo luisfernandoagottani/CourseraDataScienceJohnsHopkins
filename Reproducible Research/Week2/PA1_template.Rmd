@@ -1,0 +1,217 @@
+---
+title: 'Reproducible Research: Peer Assessment 1'
+author: "Luis Fernando Agottani"
+date: "09/08/2019"
+output:
+  html_document: default
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading and preprocessing the data
+
+Verify if the filename has been downloaded/unzip yet. If not, download/unzip the file with the fileURL link.
+
+```{r Loanding Data, echo=TRUE}
+filename <- "repdata_data_activity.zip"
+
+if (!file.exists(filename)){
+  fileURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+  download.file(fileURL, filename)
+}
+if (!file.exists("activity.csv")) { 
+  unzip(filename)
+}
+```
+
+Reading data.csv.
+
+```{r Preprocessing the data, echo=TRUE}
+
+Act<- read.csv("activity.csv", 
+               head = TRUE, sep= ",")
+```
+
+Changing the Factor type of the column date to Date with as.Date.
+
+```{r Cleaning the data, echo=TRUE}
+
+Act$date<- as.Date(Act$date)
+```
+
+## What is mean total number of steps taken per day?
+
+Library Dplyr to work with "%>%"
+
+```{r Library, echo=TRUE, message=FALSE}
+library(dplyr)
+```
+
+The total number of steps is the sum of all steps measured by day. The mean is the sum divided by the number of intervals..
+
+```{r Summarizing the steps grouping by day, echo=TRUE}
+Act_Day<- Act %>% 
+  group_by(date) %>% 
+  summarise(steps = sum(steps))
+```
+
+## Including Plots
+
+Ploting a histogram with the sum, mean and median of steps by day.
+
+```{r ploting 1 , echo=TRUE}
+hist(Act_Day$steps, 
+     breaks= seq(from=0, to=25000, by=2500), 
+     col="darkblue", 
+     border="black", 
+     xlab="Number of Steps", 
+     main="Mean and Median of the total number of steps by day", 
+     ylim=c(0, 20),
+     xlim=c(0,25000))
+
+abline(v=median(Act_Day$steps,
+                na.rm=TRUE), 
+       col="green",
+       lwd=4)
+
+abline(v=mean(Act_Day$steps, 
+              na.rm=TRUE), 
+       col="red",lwd=2)
+
+legend(x="topright", #subtitle postion
+      c("Median","Mean"), #name of the subtitle
+      col=c("green","red"), #colors
+      lty=c(1,1), #line style
+      lwd=c(4,2)) #line widht
+```
+
+## What is the average daily activity pattern?
+
+The daily activity pattern is the mean of the number of steps of all days by interval.
+
+```{r Mean the steps grouping by interval, echo=TRUE}
+Act_Interval<- Act %>% 
+  group_by(interval) %>% 
+  summarise(steps = mean(steps, 
+                         na.rm=TRUE))
+```
+
+Ploting the Mean of steps of all days by Interval with the line plot.
+
+```{r ploting 2, echo=TRUE}
+plot(Act_Interval$interval, 
+     Act_Interval$steps, 
+     type="l", 
+     col="darkblue", 
+     xlab="Interval(Minute)", 
+     ylab="Mean of steps", 
+     main="The daily activity pattern")
+
+abline(h=max(Act_Interval$steps),
+       col="green",
+       lwd=2)
+
+legend(x="topright",
+      "Valor máximo",
+      col="green",
+      lty=1,
+      lwd=2)
+```
+
+## Imputing missing values
+
+To represent the missing data and verify the number of the missing data in each column, a nice way to do it is with the package "mice" and "VIM".
+
+```{r Counting missing data, echo=TRUE, message=FALSE}
+library(mice)
+library(VIM)
+
+mice_plot <- aggr(Act_Day, 
+                  col=c('navyblue','yellow'),
+                  numbers=TRUE, 
+                  sortVars=TRUE,
+                  labels=names(Act_Day), 
+                  cex.axis=.7,
+                  gap=3, 
+                  ylab=c("Missing data","Pattern"))
+```
+
+The result show us that is a big amount, x>5%,  of NA's in the data, we have to take care to impute the a value that help us with accuracy.
+
+With library "mice" and the pmm method, we will impute values to missing data.
+
+```{r Imputing values to missing data, echo=TRUE, message=FALSE, cache=TRUE}
+imputed_Data <- mice(Act, 
+                     m=5, 
+                     maxit = 50, 
+                     method = 'pmm', 
+                     seed = 500)
+
+completeData <- complete(imputed_Data,2)
+
+completeDataSum<- completeData %>% 
+  group_by(date) %>% 
+  summarise(steps = sum(steps))
+```
+
+Ploting the complete data.
+
+```{r ploting complete data, echo=TRUE, message=FALSE}
+hist(completeDataSum$steps, 
+     breaks= seq(from=0, to=25000, by=2500), 
+     col="darkgreen", 
+     border="black", 
+     xlab="Number of Steps", 
+     main="Mean and Median of the total number of steps by day", 
+     ylim=c(0, 20),
+     xlim=c(0,25000))
+      
+
+abline(v=median(completeDataSum$steps,na.rm=TRUE), 
+       col="blue",
+       lwd=4)
+
+abline(v=mean(completeDataSum$steps, 
+              na.rm=TRUE), 
+       col="red",
+       lwd=2)
+
+legend(x="topright",
+      c("Median","Mean"),
+      col=c("blue","red"),
+      lty=c(1,1), 
+      lwd=c(4,2)) 
+```
+
+As we can see, imputing values with de pmm method showed us a similar result comparing with the first part of the assignment. So, we can assume that imputing missing values did not impacted signifcally.
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+```{r Processing data to 2 levels, "weekdays" and "weekend" , echo=TRUE}
+
+Act_days<- mutate(completeData, 
+                  days=weekdays(completeData$date))
+
+Act_week<- mutate(Act_days,
+                  weekpart=(ifelse(Act_days$days=="sábado"|Act_days$days=="domingo","weekend","weekday")))
+
+Act_weekdays<- Act_week %>% 
+  group_by(interval,weekpart) %>% 
+  summarise(steps = mean(steps))
+```
+
+Ploting the comparassion between the parts of the week, "weekdays" and "weekend", to see if have some pattern there.
+
+```{r ploting data to 2 levels, echo=TRUE}
+
+library(ggplot2)
+
+ggplot(aes(x=interval,y=steps),
+       data=Act_weekdays)+
+       geom_line(col="blue")+
+       facet_wrap(~Act_weekdays$weekpart)
+
+```
