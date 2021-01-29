@@ -1,0 +1,132 @@
+---
+title: "Manual or automatic transmission for better MPG?"
+author: "Luis Fernando Agottani"
+date: "03/09/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Summary
+
+The objective of this document is to compare the consume of fuel between automatic and manual transmission with de dataset mtcars. The variables of this data set are:
+
+[, 1]	mpg	Miles/(US) gallon
+[, 2]	cyl	Number of cylinders
+[, 3]	disp	Displacement (cu.in.)
+[, 4]	hp	Gross horsepower
+[, 5]	drat	Rear axle ratio
+[, 6]	wt	Weight (1000 lbs)
+[, 7]	qsec	1/4 mile time
+[, 8]	vs	Engine (0 = V-shaped, 1 = straight)
+[, 9]	am	Transmission (0 = automatic, 1 = manual)
+[,10]	gear	Number of forward gears
+[,11]	carb	Number of carburetors
+
+#Exploratory Data Analysis
+
+```{r cars, echo=TRUE}
+head(mtcars)
+```
+
+For this analysis, will be compared all the variables to analyse which one has more influence in the value of mpg.
+
+```{r cor, echo=TRUE}
+
+cor(mtcars)[1,]
+
+```
+
+We can see a strong correlation with mpg, cyl, disp, wt and hp. 
+
+Convert the transmission variable in factor "Automatic" and "Manual".
+
+```{r exploratory analysis, echo=TRUE}
+
+mtcars$am   <- factor(mtcars$am,labels=c("Automatic","Manual"))
+
+```
+
+
+It is possible to conclude in APPENDIX A.1 that the manual cars have higher mpg values than automatic. Now it is important to verify if the tranmission is a key factor for the influence in mpg or other variable is more important. 
+
+Simple regression, just with transmission and mpg.
+
+```{r simple regression, echo=TRUE}
+
+smr<- lm(mpg~am, mtcars)
+
+summary(smr)
+
+```
+
+As we can see, the Manual transmission has higher mgp values, but, the R-squared indicates 0,3385, what says that the tramission only represents 33,85% of the mpg results.
+
+
+```{r all regression, echo=TRUE}
+
+amr<- lm(mpg~., mtcars)
+
+summary(amr)
+
+```
+
+
+As we can see, there are strong correlations in value of P in mpg, disp, wt and hp.
+
+Using these variables we can get a better fit.
+
+```{r better regression, echo=TRUE}
+
+bmr<- lm(mpg~am + cyl + disp + wt + hp, mtcars)
+
+summary(bmr)
+
+```
+
+This is a better fit for, with R-squared equal to 82,73%.
+
+In APPENDIX A.2 is possible to analyse the correlation between the variables in the best fit model.
+
+In APPENDIX A.3 is possible to analyse the residuals of the best fit model.
+
+## CONCLUSION
+
+## Is an automatic or manual transmission better for MPG?
+
+The manual transmission usually have a higher mpg value than automatic, but the type of the transmission isn't the most influent variable in mpg value, the cyl, disp, hp, and wt have a stronger correlation.
+
+## Quantify the MPG difference between automatic and manual transmissions?
+
+Analysis  demonstrate that with the manual transmission the mpg value increses 7.245. But, when included more variable in the comparassion, cyl, disp, hp and wt, the value decrease for 1,55, and shows us that the other variables has more impact, like wt, with -3,30.
+
+## APPENDIX
+
+A.1 - Boxplot to compare mpg with Automatic and Manual transmission.
+
+```{r boxplot, echo=TRUE}
+library(ggplot2)
+
+g<- qplot(am, mpg, data=mtcars, main="MPG comparing between automatic and manual",xlab="Trasmission", ylab="mpg")
+
+g+geom_boxplot(aes(fill = am))
+```
+
+A.2 - Correlation table.
+
+```{r correlation table, echo=TRUE}
+
+pairs(mtcars[,c(1,2,3,4,6,9)], pch = 19, col = "blue", lower.panel=NULL)
+
+```
+
+A.3 - Residual plot.
+
+```{r residual plot, echo=TRUE}
+par(mfrow = c(2, 2))
+plot(bmr)
+```
