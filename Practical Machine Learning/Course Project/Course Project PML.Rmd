@@ -1,0 +1,160 @@
+---
+title: "How Well They Do It"
+author: "Luis Fernando Agottani"
+date: "12/09/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Summary
+
+The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did.
+
+## 2. Introduction
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. 
+
+Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+## The data for this project come from this source:
+http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
+
+## 3. The reference:
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. “Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human ’13)”. Stuttgart, Germany: ACM SIGCHI, 2013.
+
+## 4. Data project
+
+```{r Library, echo=TRUE}
+library(lattice)
+library(ggplot2)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(corrplot)
+library(rattle)
+library(randomForest)
+library(RColorBrewer)
+
+set.seed(2019) ##to make data reproducible
+```
+
+```{r Downloading Training Data, echo=TRUE}
+trainingfilename <- "pml-training.csv"
+
+#File exists? -No - (Download)
+if (!file.exists(trainingfilename)){
+  trainingURL <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+  download.file(trainingURL, trainingfilename)
+}
+```
+
+```{r Downloading Testing Data, echo=TRUE}
+testingfilename <- "pml-testing.csv"
+
+#File exists? -No - (Download)
+if (!file.exists(testingfilename)){
+  testingURL <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+  download.file(testingURL, testingfilename)
+}
+```
+
+```{r read training data, echo=TRUE}
+data_train<- read.csv(trainingfilename, strip.white=TRUE, na.strings=c("NA",""))
+```
+
+```{r read testing data, echo=TRUE}
+data_testing<- read.csv(testingfilename, strip.white=TRUE, na.strings=c("NA",""))
+```
+
+```{r dim data, echo=TRUE}
+dim(data_train)
+dim(data_testing)
+```
+
+Partition the training data in two parts (80% and 20%).
+
+```{r partition data, echo=TRUE}
+in_train  <- createDataPartition(data_train$classe, p=0.80, list=FALSE)
+train_set <- data_train[ in_train, ]
+test_set  <- data_train[-in_train, ]
+
+dim(train_set)
+dim(test_set)
+```
+
+Cleaning data to make it light to load removing columns with a high number of NAs and near zeros variance values.
+
+```{r cleaning data, echo=TRUE}
+nzv_var <- nearZeroVar(train_set)
+train_set <- train_set[ , -nzv_var]
+test_set  <- test_set [ , -nzv_var]
+
+na_var <- sapply(train_set, function(x) mean(is.na(x))) > 0.95
+train_set <- train_set[ , na_var == FALSE]
+test_set  <- test_set [ , na_var == FALSE]
+```
+
+Remove the firsts 5 ID columns because it is useless for this analysis.
+
+```{r removing ID columns, echo=TRUE}
+train_set <- train_set[ , -(1:5)]
+test_set  <- test_set [ , -(1:5)]
+
+dim(train_set)
+dim(test_set)
+```
+
+## 5. Data Prediction and Modelling
+
+## Using Random Forest Model
+```{r decision tree using random forest, echo=TRUE, cache=TRUE}
+set.seed(2019)
+setting <- trainControl(method="cv", 5)
+RMF <- train(classe ~ ., data=train_set, method="rf", trControl=setting, ntree=250)
+RMF
+```
+
+```{r Acurracy RMF , echo=TRUE}
+predict_RMF <- predict(RMF, test_set)
+confusionMatrix(test_set$classe, predict_RMF)
+```
+
+## Using Generalized Boosted Model (GBM)
+
+```{r Generalized Boosted Model, echo=TRUE, cache=TRUE}
+set.seed(2019)
+setting_GBM <- trainControl(method = "repeatedcv", number = 5, repeats = 2)
+GBM <- train(classe ~ ., data = train_set, method = "gbm",
+                  trControl = setting_GBM, verbose = FALSE)
+GBM$finalModel
+```
+
+```{r Acurracy GMB , echo=TRUE}
+predict_GBM <- predict(GBM, test_set)
+confusionMatrix(test_set$classe, predict_GBM)
+```
+
+The accuracy of the models:
+
+Random Forest Model: 99.68 % (The best accuracy).
+Generalized Boosted Model: 98.83 %.
+
+## 6. Applying Random Forest Model (The best accuracy) to the 20 data points of the test file.
+
+```{r Predict the testing data , echo=TRUE}
+predict_testing <- predict(RMF, newdata = data_testing)
+predict_testing
+```
+
+## 7. Appendix
+
+Decision tree model
+
+```{r Ploting decision tree , echo=TRUE}
+set.seed(2019)
+fit_decision_tree <- rpart(classe ~ ., data = train_set, method="class")
+fancyRpartPlot(fit_decision_tree)
+```
