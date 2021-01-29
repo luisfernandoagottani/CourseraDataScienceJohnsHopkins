@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title>Next word prediction App</title>
+	<meta name="description" content="Next word prediction App">
+	<meta name="author" content="Luis Fernando Rodrigues Agottani">
+	<meta name="generator" content="slidify" />
+	
+	<!-- LOAD STYLE SHEETS -->
+	<link rel="stylesheet" href="libraries/frameworks/html5slides/default/styles.css">
+	<link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />    
+</head>
+<body style='display: none'>
+	<section class='slides layout-regular template-regular'>
+     <article class="" id="slide-1" style="background:;">
+  <h3>Capstone Project JHDCC</h3>
+  <h1></h1>
+
+<ul>
+<li><p>Author: Luis Fernando Rodrigues Agottani</p></li>
+<li><p>Date: November 11th, 2019</p></li>
+</ul>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>Introduction</h3>
+  <p>The final project from Johns Hopkins  Data Science Specialization from Coursera. The goal here is to build an App that predict the next word while you type. The data are  from blogs, twitter and news, the link for the Data is <a href="https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip">HERE</a>. The data were made avaible by the course.</p>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>Loading Data, Exploratory Data Analysis, Cleaning and n-grams.</h3>
+  <p>The data was loaded from the link avaible and the Exploratory Data Analysis was made to understand the volume of the data. 
+To cleaning and create the n-grams, first were made samples files with 1% of the each data type (Twitter, Blogs and news) to make it possible, because the PC couldn&#39;t run the full data.
+The cleaning were made to remove ponctuation, put every letter to lower case, removed numbers and striped white spaces, this cleaning is very helpful to count n-grams and get a result with more precision.
+The n-grams are bags of words, were created one gram, bigrams, trigrams and tetragram for the prediciton mode.</p>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>The Prediction</h3>
+  <p>The prediction algorithm is the Stupid Back Off model, The system works with the 3 last words of the sentence typed from client and find the most probable fourth word in the fourgram data, if it doesn&#39;t match, it goes to the threegram, with the last 2 words, than, if it doesn&#39;t match, it goes to the bigram with the last word, if it doesn&#39;t match, it goes to the one gram and takes the most useble word.</p>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>How the App works</h3>
+  <p>The apps is simple, the client just type the words in the box and it gives the most problable word right in the side of the box. I did it simple because it need to be simple, the goal is to see clearly what word has more probability to be the next one when we are typing, so I haven&#39;t done anything more than that. I hope you enjoy.</p>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>Link for GitHub Repository and ShinyApp</h3>
+  <p>The app is hosted in the following link:
+<a href="https://luisfernandoagottani.shinyapps.io/CapstoneProject/">ShinyServer</a></p>
+
+<p>The application can be found in the following link:
+<a href="https://github.com/luisfernandoagottani/CapstoneProject">GitHubRepository</a></p>
+
+</article>
+
+  </section>
+</body>
+  <!-- LOAD JAVASCRIPTS  -->
+	<script src='libraries/frameworks/html5slides/default/slides.js'></script>
+	<!-- LOAD HIGHLIGHTER JS FILES -->
+	<script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	<!-- DONE LOADING HIGHLIGHTER JS FILES -->
+	 
+	</html>
